@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChromeConnecter</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main class="popup-shell">
+      <section class="card">
+        <header class="header-row">
+          <div>
+            <p class="eyebrow">远程浏览器控制</p>
+            <h1>ChromeConnecter</h1>
+          </div>
+          <label class="toggle" aria-label="启用远程连接">
+            <input id="enabled-toggle" type="checkbox">
+            <span class="toggle-slider"></span>
+          </label>
+        </header>
+
+        <section class="status-panel">
+          <div class="status-chip" id="status-chip" data-status="disconnected">
+            <span class="status-dot" id="status-dot"></span>
+            <span id="status-text">未连接</span>
+          </div>
+          <p class="status-hint" id="status-hint">关闭状态下不会连接中继服务器</p>
+        </section>
+
+        <section class="field-group totp-panel" id="totp-panel" data-totp-state="unbound">
+          <div class="field-label-row">
+            <label>TOTP 验证</label>
+          </div>
+
+          <section class="totp-state" data-state="unbound">
+            <img id="totp-qrcode" class="totp-qrcode" alt="TOTP 绑定二维码">
+            <p class="totp-description">使用 Google Authenticator 扫描二维码完成绑定</p>
+            <div class="button-row single-action-row">
+              <button id="confirm-bind-button" type="button" class="accent-button">已扫描完成</button>
+            </div>
+          </section>
+
+          <section class="totp-state" data-state="bound">
+            <input
+              id="totp-code-input"
+              class="pairing-input totp-code-input"
+              type="text"
+              inputmode="numeric"
+              spellcheck="false"
+              maxlength="6"
+              placeholder="123456"
+              aria-label="6位验证码"
+            >
+            <div class="button-row totp-action-row">
+              <button id="verify-button" type="button" class="accent-button">验证</button>
+              <button type="button" class="reset-totp-button ghost-button danger-ghost-button">重置绑定</button>
+            </div>
+          </section>
+
+          <section class="totp-state" data-state="verified">
+            <p id="session-status" class="session-status">会话有效</p>
+            <p id="session-timer" class="session-timer">剩余时间: 0秒</p>
+            <div class="button-row single-action-row">
+              <button type="button" class="reset-totp-button ghost-button danger-ghost-button">重置绑定</button>
+            </div>
+          </section>
+
+          <p class="field-help" id="totp-help">绑定后请使用 Google Authenticator 输入 6 位动态验证码。</p>
+        </section>
+
+        <section class="field-group">
+          <label for="session-duration">会话有效期</label>
+          <select id="session-duration" class="session-duration-select">
+            <option value="3600000">1 小时</option>
+            <option value="7200000">2 小时</option>
+            <option value="14400000">4 小时</option>
+            <option value="28800000" selected>8 小时（默认）</option>
+            <option value="43200000">12 小时</option>
+            <option value="86400000">24 小时</option>
+          </select>
+          <p class="field-help">设置自动断开连接的时间，过期后需重新输入动态验证码</p>
+        </section>
+
+        <section class="field-group">
+          <label for="server-url">中继服务器地址</label>
+          <input
+            id="server-url"
+            class="server-input"
+            type="text"
+            spellcheck="false"
+            placeholder="ws://localhost:18793"
+            aria-label="中继服务器地址"
+          >
+          <p class="field-help">修改后会自动保存，并通知后台重新连接</p>
+        </section>
+      </section>
+    </main>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>
