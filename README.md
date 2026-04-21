@@ -76,8 +76,53 @@
 
 详细的 API 接口文档和能力清单，请查阅本项目中的 `skill/SKILL.md` 文件。
 
+---
+
+## 4. OpenClaw / Skill 推荐工作流（强烈建议）
+
+为避免“临时抓取一次就失效”的问题，建议将抓取能力维护为可复用脚本：
+
+1. 用户给出目标地址（如论坛帖子、公众号文章）。
+2. AI 先尝试执行站点脚本：`python3 crawlers/<site_category>.py <URL>`。
+3. 若脚本成功：直接返回保存路径。
+4. 若脚本失败或不存在：基于 `crawlers/crawler_template.py` 新建/修复脚本，再重试。
+5. 脚本稳定后继续复用，不再走一次性临时逻辑。
+
+> 对于附件下载场景，优先在脚本中实现“正文必保存 + 附件状态可追踪”的策略，避免整帖失败。
+
+---
+
+## 5. 数据落盘规范（建议）
+
+- 文本正文保存到：`downloads/<site_category>/<post_title>_<timestamp>/post_content.txt`
+- 附件保存到：同目录下 `attachments/`
+- `post_content.txt` 文件头建议包含：
+  - `Source URL`
+  - `Attachment Count`
+  - `Attachment Status`（如 `downloaded` / `local_download_triggered` / `timeout`）
+
+这样即便附件因站点限制未落到服务端，也能在正文中明确追踪。
+
+---
+
+## 6. Git 提交规范（重要）
+
+本项目常包含敏感抓取目标、下载数据和本地调试痕迹，建议默认不入库：
+
+- `downloads/`：下载内容与帖子文本，禁止提交。
+- `crawlers/`：业务站点脚本，按需本地维护，默认不提交。
+- `.totp-secret.json`、`.env`、日志文件：禁止提交。
+
+推荐仅提交通用代码与说明文档（如 `relay-server/`、`extension/`、`skill/`、`README.md`）。
+
 ### 常见问题与排错 (FAQ)
 - **Q: 扩展一直显示黄色的“连接中”？**
   A: 检查服务器 IP 是否填错，以及云主机提供商（如阿里云/腾讯云）控制台的“安全组”规则中是否放行了 18793 端口。
 - **Q: 二维码刷不出来，如何手动绑定 TOTP？**
   A: 在云主机终端运行 `curl http://127.0.0.1:18794/api/totp/setup`，会返回一个包含 `secret` 字段的 JSON。在手机 Authenticator 应用中选择“手动输入密钥”，填入该 secret 即可生成动态密码。
+- **Q: 每次爬取都要输入新的验证码吗？**
+  A: 不需要。连接验证成功后会生成会话（默认 8 小时），会话未过期期间可重复调用 API。过期后再输入新验证码即可。
+- **Q: OpenClaw 反应慢，验证码经常超时怎么办？**
+  A: 建议优先使用手动 `curl /api/connect` 建会话，再把 `sessionToken` 交给脚本使用；并在验证码刷新后立刻提交，避免在 30 秒窗口尾部输入。
+- **Q: 附件点击了但本地没下载，算失败吗？**
+  A: 不应算整帖失败。应先保存正文与元数据，并将附件状态写入 `post_content.txt`，后续再单独排查浏览器下载策略（自动下载权限、默认下载路径、站点二次确认等）。
