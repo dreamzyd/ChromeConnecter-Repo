@@ -1,9 +1,11 @@
 node_modules/
 downloads/
-crawlers/
 .DS_Store
 .env
 .totp-secret.json
 *.log
 
 # 业务抓取目录默认不入库，避免敏感目标泄露
+crawlers/*
+!crawlers/utils.py
+!crawlers/crawler_template.py
